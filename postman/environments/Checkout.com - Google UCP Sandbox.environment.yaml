@@ -1,0 +1,35 @@
+name: Checkout.com / Google UCP Sandbox
+values:
+  - key: merchantBaseUrl
+    value: ''
+  - key: ucp3dsExtensionVersion
+    value: ''
+  - key: authToken
+    value: ''
+  - key: partnerId
+    value: ''
+  - key: partnerApiKey
+    value: ''
+  - key: webhookSignatureInput
+    value: ''
+  - key: webhookSignature
+    value: ''
+  - key: checkoutSessionId
+    value: ''
+  - key: ckoBaseUrl
+    value: ''
+  - key: ckoUcp3dsBaseUrl
+    value: ''
+  - key: ckoPublicKey
+    value: ''
+  - key: ckoSecretKey
+    value: ''
+  - key: ckoProcessingChannelId
+    value: ''
+  - key: ckoTokenId
+    value: ''
+  - key: ckoUcp3dsUrl
+    value: ''
+  - key: webhookHash
+    value: ''
+color: 240

@@ -1,0 +1,155 @@
+$kind: http-request
+name: "Google: Complete checkout session"
+description: |-
+  ### Example merchant responses
+
+  Payment processed successfully:
+
+  ``` json
+  {
+    "ucp": {
+        "version": "2026-04-08",
+        "status": "success",
+        "capabilities": [...]
+    },
+    "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+    "status": "completed",
+    // ... other fields (line_items, currency, etc.)
+    "payment": {
+      "instruments": [
+        {
+          "id": "94e7fee0-1a82-4c2a-9ef4-0861a3c829b2",
+          "handler_id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+          "type": "card",
+          "selected": true,
+          "display": {
+            "brand": "VISA",
+            "description": "Visa •••• 1234",
+            "last_digits": "1234"
+          },
+          "billing_address": {
+            "first_name": "John",
+            "last_name": "Buyer",
+            "street_address": "100 Main St",
+            "extended_address": "Apt 4B",
+            "address_locality": "San Francisco",
+            "address_region": "CA",
+            "postal_code": "94105",
+            "address_country": "US",
+            "phone_number": "+18888888888"
+          }
+        }
+      ]
+    },
+    "order": {
+      "id": "ORD1773956535-2727807",
+      // Example customer-facing order number
+      "label": "#100",
+      "permalink_url": "https://merchant.example.com/orders/789"
+    }
+  }
+
+   ```
+
+  Additional information required:
+
+  ``` json
+  {
+    "ucp": {
+      "version": "2026-04-08",
+      "status": "success"
+    },
+    "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+    "status": "incomplete",
+    "messages": [
+      {
+        "type": "error",
+        "code": "missing_buyer_info",
+        "severity": "recoverable",
+        "content": "Buyer email is required"
+      },
+      {
+        "type": "error",
+        "code": "missing_fulfillment_info",
+        "severity": "recoverable",
+        "content": "Select delivery window for your purchase"
+      }
+    ]
+  }
+
+   ```
+
+  3DS authentication challenge required:
+
+  ``` json
+  {
+    "status": "complete_in_progress",
+    "actions": {
+      "dev.ucp.common.payment.three_ds_challenge": [
+        {
+          "id": "three-ds-challenge-1",
+          "config": {
+            "payment_instrument_id": "instrument_1",
+            "url": "https://api.sandbox.checkout.com/agentic_commerce/ucp/3ds/wrap.html?u=https://authentication-devices.sandbox.checkout.com/sessions-interceptor/sid_3egvq7qb3adypf3jhbh5o72bpe&a=three-ds-challenge-1&v=2026-08-25"
+          }
+        }
+      ]
+    }
+  }
+
+   ```
+url: "{{merchantBaseUrl}}/checkout-sessions/{{checkoutSessionId}}/complete"
+method: POST
+headers:
+  Content-Type: application/json
+  UCP-Agent: profile="https://ucp.goog/.well-known/ucp"
+  Idempotency-Key: "{{$guid}}"
+body:
+  type: json
+  content: |-
+    {
+      "payment": {
+        "instruments": [
+          {
+            "billing_address": {
+              "first_name": "John",
+              "last_name": "Buyer",
+              "street_address": "100 Main St",
+              "extended_address": "Apt 4B",
+              "address_locality": "San Francisco",
+              "address_region": "CA",
+              "postal_code": "94105",
+              "address_country": "US",
+              "phone_number": "+18888888888"
+            },
+            "credential": {
+              "token": "examplePaymentMethodToken",
+              "type": "PAYMENT_GATEWAY"
+            },
+            "display": {
+              "brand": "VISA",
+              "description": "Visa •••• 1234",
+              "last_digits": "1234"
+            },
+            "handler_id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+            "id": "94e7fee0-1a82-4c2a-9ef4-0861a3c829b2",
+            "selected": true,
+            "type": "card"
+          }
+        ]
+      },
+      "signals": {
+        "com.google.authentication_triggered": "",
+        "com.google.authorization_processed_with_3ds": "",
+        "com.google.avs_full_result": "",
+        "com.google.cvv_result": "",
+        "com.google.ip_address": "203.0.113.1",
+        "dev.ucp.buyer_id": "ec46fedc6aad89d3660a50a61d00b4908fd160ecf5dda6d49ed41a605c5b180a",
+        "dev.ucp.buyer_ip": "203.0.113.1"
+      }
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{authToken}}"
+order: 3839862999395760

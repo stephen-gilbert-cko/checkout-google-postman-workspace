@@ -1,9 +1,15 @@
-# Use this workspace to collaborate
 workspace:
   id: 7da820cc-ea21-46f9-af00-c127ddfecaaf
-
-# All resources in the `postman/` folder are automatically registered in Local View.
-# Point to additional files outside the `postman/` folder to register them individually. Example:
-#localResources:
-#  collections:
-#    - ../tests/E2E Test Collection/
+cloudResources:
+  collections:
+    ../postman/collections/Checkout.com - Google UCP: 56199500-3df187c5-abbb-4f72-b709-39d3b24f4c14
+  globals:
+    ../postman/globals/workspace.globals.yaml: 073a2c03-4041-45e5-8f6b-b3ce3cb82a9d
+  environments:
+    ../postman/environments/Checkout.com - Google UCP Sandbox.environment.yaml: 56199500-a88a812c-d6a9-4115-90c1-4168370f516e
+localResources:
+  specs:
+    - ../postman/specs/Checkout.com / Google UCP/ Google UCP.yaml
+resourceNameMappings:
+  specs:
+    - ../postman/specs/Checkout.com / Google UCP/ Google UCP.yaml: Checkout.com / Google UCP

@@ -1,0 +1,140 @@
+$kind: http-request
+name: "Google: Discover business"
+description: |-
+  Example merchant response:
+
+  ``` json
+  {
+    "ucp": {
+      "version": "2026-04-08",
+      "services": {
+        "dev.ucp.shopping": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/overview",
+            "transport": "rest",
+            "endpoint": "https://business.example.com/ucp/v1",
+            "schema": "https://ucp.dev/2026-04-08/services/shopping/rest.openapi.json"
+          }
+        ]
+      },
+      "capabilities": {
+        "dev.ucp.common.identity_linking": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/identity-linking",
+            "schema": "https://ucp.dev/2026-04-08/schemas/common/identity_linking.json",
+            "config": {
+              "scopes": {
+                "dev.ucp.shopping.order:read": {},
+                "dev.ucp.shopping.order:manage": {}
+              }
+            }
+          }
+        ],
+        "dev.ucp.shopping.cart": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/cart",
+            "schema": "https://ucp.dev/2026-04-08/schemas/shopping/cart.json"
+          }
+        ],
+        "dev.ucp.shopping.checkout": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/checkout",
+            "schema": "https://ucp.dev/2026-04-08/schemas/shopping/checkout.json"
+          }
+        ],
+        "dev.ucp.shopping.fulfillment": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/fulfillment",
+            "schema": "https://ucp.dev/2026-04-08/schemas/shopping/fulfillment.json",
+            "extends": "dev.ucp.shopping.checkout"
+          }
+        ],
+        "dev.ucp.shopping.discount": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/discount",
+            "schema": "https://ucp.dev/2026-04-08/schemas/shopping/discount.json",
+            "extends": "dev.ucp.shopping.checkout"
+          }
+        ],
+        "dev.ucp.shopping.order": [
+          {
+            "version": "2026-04-08",
+            "spec": "https://ucp.dev/2026-04-08/specification/order",
+            "schema": "https://ucp.dev/2026-04-08/schemas/shopping/order.json"
+          }
+        ]
+      },
+      "payment_handlers": {
+        "com.google.pay": [
+          {
+            "id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+            "version": "2026-01-23",
+            "spec": "https://pay.google.com/gp/p/ucp/2026-01-23/",
+            "schema": "https://pay.google.com/gp/p/ucp/2026-01-23/schemas/config.json",
+            "config": {
+              "api_version": 2,
+              "api_version_minor": 0,
+              "environment": "TEST",
+              "merchant_info": {
+                "merchant_name": "Example Merchant",
+                "merchant_id": "KWMZPRLQFTYNXSDB",
+                "merchant_origin": "checkout.merchant.com"
+              },
+              "allowed_payment_methods": [
+                {
+                  "type": "CARD",
+                  "parameters": {
+                    "allowed_auth_methods": [ "PAN_ONLY" ],
+                    "allowed_card_networks": [
+                      "AMEX",
+                      "DISCOVER",
+                      "JCB",
+                      "MASTERCARD",
+                      "VISA"
+                    ],
+                    "billing_address_required": true,
+                    "billing_address_parameters": {
+                      "format": "FULL",
+                      "phone_number_required": true
+                    }
+                  },
+                  "tokenization_specification": {
+                    "type": "PAYMENT_GATEWAY",
+                    "parameters": {
+                      "gateway": "example",
+                      "gatewayMerchantId": "exampleGatewayMerchantId"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "signing_keys": [
+      {
+        "kid": "business_2025",
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "WbbXwVYGdJoP4Xm3qCkGvBRcRvKtEfXDbWvPzpPS8LA",
+        "y": "sP4jHHxYqC89HBo8TjrtVOAGHfJDflYxw7MFMxuFMPY",
+        "use": "sig",
+        "alg": "ES256"
+      }
+    ]
+  }
+
+   ```
+url: "{{merchantBaseUrl}}/.well-known/ucp"
+method: GET
+headers:
+  Content-Type: application/json
+  UCP-Agent: profile="https://ucp.goog/.well-known/ucp"
+order: 1000

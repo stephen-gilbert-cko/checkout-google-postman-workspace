@@ -1,0 +1,103 @@
+$kind: http-example
+auth:
+  type: apikey
+  credentials:
+    key: X-Goog-Api-Key
+    value: "{{partnerApiKey}}"
+request:
+  url: https://shoppingdataintegration.googleapis.com/v1/webhooks/partners/{{partnerId}}/events/order
+  method: POST
+  headers:
+    Webhook-Id: fulfill_evt_{{$guid}}
+    Webhook-Timestamp: "{{$isoTimestamp}}"
+    Content-Digest: "{{webhookHash}}"
+    UCP-Agent: profile="{{merchantBaseUrl}}/.well-known/ucp"
+    Signature-Input: "{{webhookSignatureInput}}"
+    Signature: "{{webhookSignature}}"
+  body:
+    type: json
+    content: |-
+      {
+        "ucp": {
+          "version": "2026-04-08",
+          "capabilities": {
+            "dev.ucp.shopping.order": [{"version": "2026-04-08"}]
+          }
+        },
+        "id": "order_multi_01",
+        "checkout_id": "checkout_multi_01",
+        "currency": "USD",
+        "line_items": [
+          {
+            "id": "line_1",
+            "item": { "id": "product_1", "title": "Item 1", "price": 5000 },
+            "quantity": { "total": 1, "fulfilled": 1 },
+            "totals": [
+              {"type": "subtotal", "display_text": null, "amount": 5000},
+              {"type": "total", "display_text": null, "amount": 5000}
+            ],
+            "status": "fulfilled"
+          },
+          {
+            "id": "line_2",
+            "item": { "id": "product_2", "title": "Item 2", "price": 5000 },
+            "quantity": { "total": 1, "fulfilled": 1 },
+            "totals": [
+              {"type": "subtotal", "display_text": null, "amount": 5000},
+              {"type": "total", "display_text": null, "amount": 5000}
+            ],
+            "status": "fulfilled"
+          }
+        ],
+        "totals": [
+          {"type": "subtotal", "display_text": "Subtotal", "amount": 10000},
+          {"type": "fee", "display_text": "Shipping", "amount": 500},
+          {"type": "total", "display_text": "Total", "amount": 10500}
+        ],
+        "fulfillment": {
+          "expectations": [
+            {
+              "id": "exp_1",
+              "line_items": [
+                { "id": "line_1", "quantity": 1 },
+                { "id": "line_2", "quantity": 1 }
+              ],
+              "method_type": "shipping",
+              "destination": {
+                "first_name": "Alice",
+                "last_name": "Example",
+                "street_address": "123 Main St",
+                "address_locality": "Austin",
+                "address_region": "TX",
+                "address_country": "US",
+                "postal_code": "78701"
+              },
+              "description": "Standard Shipping",
+              "fulfillable_on": "now"
+            }
+          ],
+          "events": [
+            {
+              "id": "fulfill_evt_1",
+              "occurred_at": "2026-02-08T10:30:00Z",
+              "type": "shipped",
+              "line_items": [
+                { "id": "line_1", "quantity": 1 },
+                { "id": "line_2", "quantity": 1 }
+              ],
+              "tracking_number": "123456789",
+              "tracking_url": "https://fedex.com/track/123456789",
+              "carrier": "FedEx",
+              "description": "Both items shipped together"
+            }
+          ]
+        },
+        "permalink_url": "https://merchant.example.com/orders/456"
+      }
+response:
+  statusCode: 200
+  statusText: ""
+  body:
+    type: json
+    content: ""
+order: 1789745526444

@@ -1,0 +1,87 @@
+$kind: http-request
+name: "Merchant: Push order delivered event"
+url: https://shoppingdataintegration.googleapis.com/v1/webhooks/partners/{{partnerId}}/events/order
+method: POST
+headers:
+  Webhook-Id: fulfill_evt_{{$guid}}
+  Webhook-Timestamp: "{{$isoTimestamp}}"
+  Content-Digest: "{{webhookHash}}"
+  UCP-Agent: profile="{{merchantBaseUrl}}/.well-known/ucp"
+  Signature-Input: "{{webhookSignatureInput}}"
+  Signature: "{{webhookSignature}}"
+body:
+  type: json
+  content: |-
+    {
+      "ucp": {
+        "version": "2026-04-08",
+        "capabilities": {
+          "dev.ucp.shopping.order": [{"version": "2026-04-08"}]
+        }
+      },
+      "id": "order_01",
+      "checkout_id": "checkout_01",
+      "currency": "USD",
+      "line_items": [
+        {
+          "id": "line_1",
+          "item":
+            {
+              "id": "product_123",
+              "title": "Running Shoes",
+              "price": 10000
+            },
+          "quantity": { "total": 1, "fulfilled": 1 },
+          "totals": [
+            {"type": "subtotal", "amount": 10000},
+            {"type": "total", "amount": 10000}
+          ],
+          "status": "fulfilled"
+        }
+      ],
+      "totals": [
+        {"type": "subtotal", "amount": 10000},
+        {"type": "total", "amount": 10000}
+      ],
+      // Updated fulfillment details
+      "fulfillment": {
+        "events": [
+          {
+            "id": "fulfill_evt_1",
+            "occurred_at": "2026-02-08T10:30:00Z",
+            "type": "shipped",
+            "line_items": [{ "id": "line_1", "quantity": 1 }],
+            "tracking_number": "123456789",
+            "tracking_url": "https://fedex.com/track/123456789",
+            "carrier": "FedEx",
+            "description": "Shipping departed from warehouse"
+          },
+          {
+            "id": "fulfill_evt_2",
+            "occurred_at": "2026-02-10T14:00:00Z",
+            "type": "delivered",
+            "line_items": [{ "id": "line_1", "quantity": 1 }],
+            "tracking_number": "123456789",
+            "tracking_url": "https://fedex.com/track/123456789",
+            "carrier": "FedEx",
+            "description": "Package delivered"
+          }
+        ],
+        "expectations": [{ "...": "..." }]
+      },
+      "permalink_url": "https://merchant.example.com/orders/123"
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Goog-Api-Key
+    value: "{{partnerApiKey}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      const rawRequestBody = pm.request.body.raw;
+      const hash = CryptoJS.SHA256(rawRequestBody).toString();
+
+      pm.environment.set("webhookHash", hash);
+examples: .resources/Merchant- Push order delivered event.resources/examples
+order: 4502618459448196

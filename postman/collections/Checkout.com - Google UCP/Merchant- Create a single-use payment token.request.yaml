@@ -1,0 +1,29 @@
+$kind: http-request
+name: "Merchant: Create a single-use payment token"
+url: "{{ckoBaseUrl}}/tokens"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "type": "googlepay",
+        "token_data": {
+            "signature": "MEUCIGNeSpbC+WYPwdCB6n4NzT3iLcX1EZ5C73z/77mIrEgBAiEA0p84kRQJNMpGBqPbFqWaKJ2dtCYgfHwCat3nbZsK7Rg=",
+            "protocolVersion": "ECv1",
+            "signedMessage": "{\"encryptedMessage\":\"LpeGZ7T3avwZAunTXTHNbSAFDUj92htIrIcg3GhJLf+2lEx9SN1Z5xjG1A4WxqxEhy9a6LojQocFrJbU81HmlxOScfImip+w3A1i+pNA4ZLGiuye4Yjyuh9ebUioPnL4u6HdzmpMYCdKu08tv/LrQv06GTrUjO2PPP0IrGw6jfGrlVaSCrH1456BLIu0ibpGl7W5bgFpdte/0PxlMjxGxwj7pbNzNXh4h8Yng4FTMwtGqp7yLKGcPn7qbf6fmPGtlXk6dmeFJp556ydPFsh1ttIgG+R0BiVE7lUQrjQTtO9lOpxIzmH4RlwlsOYNvaFkOs4lFaAIXZGNnub8VAi2laB9rvTUmHh00c612LGimC0cWx0c4OHY2a5mwflbq2HeDwS6BYXkhbR+mKGM9ZTW03KbZzcRw+R7tzklwx8X7rYFWKDVCkbLcYv5NaiRYYKoAmYZLrHxpYg/\",\"ephemeralPublicKey\":\"BB7ykrDf2ek+jKnGbPpnN9xsi0dkKqvfwUC+z9fpyPyGC0SykKwmaXLoFp4DDYndJ1v8Is16tIXN+c3PHqm/Ab4\\u003d\",\"tag\":\"nudDqC724RrbCX+ek3fPEWoyUpfSDo0dCT/rHTfhcTw\\u003d\"}"
+        }
+    }
+auth:
+  type: apikey
+  credentials:
+    key: Authorization
+    value: "{{ckoPublicKey}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const response = pm.response.json();
+      pm.environment.set("ckoTokenId", response["token"]);
+    language: text/javascript
+order: 4462447426762929

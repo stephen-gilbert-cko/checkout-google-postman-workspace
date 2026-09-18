@@ -1,0 +1,84 @@
+$kind: http-request
+name: "Merchant: Push order created event"
+url: https://shoppingdataintegration.googleapis.com/v1/webhooks/partners/{{partnerId}}/events/order
+method: POST
+headers:
+  Webhook-Id: order_{{$guid}}
+  Webhook-Timestamp: "{{$isoTimestamp}}"
+  Content-Digest: "{{webhookHash}}"
+  UCP-Agent: profile="{{merchantBaseUrl}}/.well-known/ucp"
+  Signature-Input: "{{webhookSignatureInput}}"
+  Signature: "{{webhookSignature}}"
+body:
+  type: json
+  content: |-
+    {
+      "ucp": {
+        "version": "2026-04-08",
+        "capabilities": {
+          "dev.ucp.shopping.order": [{"version": "2026-04-08"}]
+        }
+      },
+      "id": "order_01",
+      "checkout_id": "checkout_01",
+      "currency": "USD",
+       // Always include all line items, even for single-item checkouts. This ensures any add-ons, gifts, or separate charges are accounted for.
+      "line_items": [
+        {
+          "id": "line_1",
+          "item":
+            {
+              "id": "product_123",
+              "title": "Running Shoes",
+              "price": 10000
+            },
+          "quantity": { "total": 1, "fulfilled": 0 },
+          "totals": [
+            {"type": "subtotal", "display_text": null, "amount": 10000},
+            {"type": "total", "display_text": null, "amount": 10000}
+          ],
+          // The status of a line item must match total and fulfilled quantities (e.g., total 1, fulfilled 0 -> status: processing).
+          "status": "processing"
+        }
+      ],
+      "totals": [
+        {"type": "subtotal", "display_text": "Subtotal", "amount": 10000}, // Tax-inclusive markets: Set display_text to "Subtotal (including taxes)". Amount must include tax.
+        {"type": "fee", "display_text": "Service Fee", "amount": 100},
+        {"type": "tax", "display_text": "Tax", "amount": 800}, // Tax-inclusive markets: Omit this entry.
+        {"type": "total", "display_text": "Total", "amount": 10900}
+      ],
+      "fulfillment": {
+        "expectations": [
+          {
+            "id": "exp_1",
+            "line_items": [{ "id": "line_1", "quantity": 1 }],
+            "method_type": "shipping",
+            "destination": {
+              "first_name": "Alice",
+              "last_name": "Example",
+              "street_address": "123 Main St",
+              "address_locality": "Austin",
+              "address_region": "TX",
+              "address_country": "US",
+              "postal_code": "78701"
+            },
+            "description": "Arrives in 2-3 business days",  // Maximum length: 200 characters.
+            "fulfillable_on": "now"
+          }
+        ]
+      },
+      "permalink_url": "https://merchant.example.com/orders/789"
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Goog-Api-Key
+    value: "{{partnerApiKey}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      const rawRequestBody = pm.request.body.raw;
+      const hash = CryptoJS.SHA256(rawRequestBody).toString();
+
+      pm.environment.set("webhookHash", hash);
+order: 4502488956225159

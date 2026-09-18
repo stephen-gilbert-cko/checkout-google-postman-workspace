@@ -1,0 +1,1434 @@
+openapi: 3.0.0
+info:
+  title: Checkout.com / Google UCP
+  version: 1.0.0
+  description: ''
+servers:
+  - url: '{{merchantBaseUrl}}'
+  - url: '{{ckoBaseUrl}}'
+  - url: 'https://shoppingdataintegration.googleapis.com'
+paths:
+  /.well-known/ucp:
+    get:
+      summary: 'Google: Discover business'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+      responses: {}
+      description: |-
+        Example merchant response:
+
+        ``` json
+        {
+          "ucp": {
+            "version": "2026-04-08",
+            "services": {
+              "dev.ucp.shopping": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/overview",
+                  "transport": "rest",
+                  "endpoint": "https://business.example.com/ucp/v1",
+                  "schema": "https://ucp.dev/2026-04-08/services/shopping/rest.openapi.json"
+                }
+              ]
+            },
+            "capabilities": {
+              "dev.ucp.common.identity_linking": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/identity-linking",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/common/identity_linking.json",
+                  "config": {
+                    "scopes": {
+                      "dev.ucp.shopping.order:read": {},
+                      "dev.ucp.shopping.order:manage": {}
+                    }
+                  }
+                }
+              ],
+              "dev.ucp.shopping.cart": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/cart",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/shopping/cart.json"
+                }
+              ],
+              "dev.ucp.shopping.checkout": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/checkout",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/shopping/checkout.json"
+                }
+              ],
+              "dev.ucp.shopping.fulfillment": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/fulfillment",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/shopping/fulfillment.json",
+                  "extends": "dev.ucp.shopping.checkout"
+                }
+              ],
+              "dev.ucp.shopping.discount": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/discount",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/shopping/discount.json",
+                  "extends": "dev.ucp.shopping.checkout"
+                }
+              ],
+              "dev.ucp.shopping.order": [
+                {
+                  "version": "2026-04-08",
+                  "spec": "https://ucp.dev/2026-04-08/specification/order",
+                  "schema": "https://ucp.dev/2026-04-08/schemas/shopping/order.json"
+                }
+              ]
+            },
+            "payment_handlers": {
+              "com.google.pay": [
+                {
+                  "id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+                  "version": "2026-01-23",
+                  "spec": "https://pay.google.com/gp/p/ucp/2026-01-23/",
+                  "schema": "https://pay.google.com/gp/p/ucp/2026-01-23/schemas/config.json",
+                  "config": {
+                    "api_version": 2,
+                    "api_version_minor": 0,
+                    "environment": "TEST",
+                    "merchant_info": {
+                      "merchant_name": "Example Merchant",
+                      "merchant_id": "KWMZPRLQFTYNXSDB",
+                      "merchant_origin": "checkout.merchant.com"
+                    },
+                    "allowed_payment_methods": [
+                      {
+                        "type": "CARD",
+                        "parameters": {
+                          "allowed_auth_methods": [ "PAN_ONLY" ],
+                          "allowed_card_networks": [
+                            "AMEX",
+                            "DISCOVER",
+                            "JCB",
+                            "MASTERCARD",
+                            "VISA"
+                          ],
+                          "billing_address_required": true,
+                          "billing_address_parameters": {
+                            "format": "FULL",
+                            "phone_number_required": true
+                          }
+                        },
+                        "tokenization_specification": {
+                          "type": "PAYMENT_GATEWAY",
+                          "parameters": {
+                            "gateway": "example",
+                            "gatewayMerchantId": "exampleGatewayMerchantId"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "signing_keys": [
+            {
+              "kid": "business_2025",
+              "kty": "EC",
+              "crv": "P-256",
+              "x": "WbbXwVYGdJoP4Xm3qCkGvBRcRvKtEfXDbWvPzpPS8LA",
+              "y": "sP4jHHxYqC89HBo8TjrtVOAGHfJDflYxw7MFMxuFMPY",
+              "use": "sig",
+              "alg": "ES256"
+            }
+          ]
+        }
+
+         ```
+  /checkout-sessions:
+    post:
+      summary: 'Google: Create checkout session'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          example: '{{$guid}}'
+      responses: {}
+      security:
+        - BearerAuth: []
+      description: |-
+        ### Example merchant responses
+
+        Checkout session created successfully:
+
+        ``` json
+        // Initialize Session with multiple items.
+        {
+          "ucp": {
+            "version": "2026-04-08",
+            "status": "success",
+            "capabilities": {
+              "dev.ucp.shopping.checkout": [ { "version": "2026-04-08" } ],
+              "dev.ucp.shopping.fulfillment": [ { "version": "2026-04-08", "extends": "dev.ucp.shopping.checkout" } ]
+            },
+            "payment_handlers": {
+              "com.google.pay": [
+                {
+                  "id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+                  "version": "2026-01-23",
+                  "spec": "https://pay.google.com/gp/p/ucp/2026-01-23/",
+                  "schema": "https://pay.google.com/gp/p/ucp/2026-01-23/schemas/config.json",
+                  "config": {
+                    "api_version": 2,
+                    "api_version_minor": 0,
+                    "environment": "TEST",
+                    "merchant_info": {
+                      "merchant_name": "Example Merchant",
+                      "merchant_id": "KWMZPRLQFTYNXSDB",
+                      "merchant_origin": "checkout.merchant.com"
+                    },
+                    "allowed_payment_methods": [
+                      {
+                        "type": "CARD",
+                        "parameters": {
+                          "allowed_auth_methods": [ "PAN_ONLY", "CRYPTOGRAM_3DS" ],
+                          "allowed_card_networks": [ "AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA" ],
+                          "billing_address_required": true,
+                          "billing_address_parameters": {
+                            "format": "FULL",
+                            "phone_number_required": true
+                          }
+                        },
+                        "tokenization_specification": {
+                          "type": "PAYMENT_GATEWAY",
+                          "parameters": {
+                            "gateway": "example",
+                            "gatewayMerchantId": "exampleGatewayMerchantId"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+          "status": "incomplete",
+          "messages": [
+            {
+              "type": "error",
+              "code": "missing_buyer_info",
+              "path": "$.buyer",
+              "content_type": "plain",
+              "content": "Buyer information is required for checkout",
+              "severity": "recoverable"
+            },
+            {
+              "type": "error",
+              "code": "missing_fulfillment_info",
+              "path": "$.fulfillment.methods[0].destinations[0]",
+              "content_type": "plain",
+              "content": "Shipping address is incomplete",
+              "severity": "recoverable"
+            }
+          ],
+          "currency": "USD",
+          "line_items": [
+            {
+              "id": "line_1",
+              "item": {
+                "id": "product_12345",
+                "title": "Running Shoes",
+                "price": 10000,
+                "image_url": "https://merchant.example.com/images/product_12345.png"
+              },
+              "quantity": 1,
+              "totals": [
+                {
+                  "type": "subtotal",
+                  "amount": 10000
+                },
+                {
+                  "type": "total",
+                  "amount": 10000
+                }
+              ]
+            },
+            {
+              "id": "line_2",
+              "item": {
+                "id": "product_67890",
+                "title": "T-Shirt",
+                "price": 2500,
+                "image_url": "https://merchant.example.com/images/product_67890.png"
+              },
+              "quantity": 1,
+              "totals": [
+                {
+                  "type": "subtotal",
+                  "amount": 2500
+                },
+                {
+                  "type": "total",
+                  "amount": 2500
+                }
+              ]
+            }
+          ],
+          "totals": [
+            {
+              "type": "subtotal",
+              "display_text": "Subtotal", // Tax-inclusive markets: Set to "Subtotal (including taxes)".
+              "amount": 12500 // Tax-inclusive markets: Amount must include tax.
+            },
+            {
+              "type": "fee",
+              "display_text": "Fees",
+              "amount": 549,
+              "lines": [
+                { "display_text": "Service Fee", "amount": 399 },
+                { "display_text": "Recycling Fee", "amount": 150 }
+              ]
+            },
+            {
+              "type": "fulfillment",
+              "display_text": "Ground Shipping", // Tax-inclusive markets: Provide display text for fulfillment totals.
+              "amount": 500
+            },
+            {
+              "type": "tax", // Tax-inclusive markets: Omit this entry.
+              "display_text": "Estimated Tax",
+              "amount": 1050
+            },
+            {
+              "type": "total",
+              "display_text": "Total",
+              "amount": 14599
+            }
+          ],
+          "fulfillment": {
+            "methods": [
+              {
+                "id": "method_shipping",
+                "type": "shipping",
+                "line_item_ids": [
+                  "line_1",
+                  "line_2"
+                ],
+                "destinations": [
+                  {
+                    "id": "addr_1",
+                    "address_locality": "Sunnyvale",
+                    "address_region": "CA",
+                    "postal_code": "94089",
+                    "address_country": "US"
+                  }
+                ],
+                "selected_destination_id": "addr_1",
+                "groups": [
+                  {
+                    "id": "group_1",
+                    "line_item_ids": [
+                      "line_1",
+                      "line_2"
+                    ],
+                    "options": [
+                      {
+                        "id": "ship_ground",
+                        "title": "Ground (3-5 days)",
+                        "description": "Estimated Delivery: Fri 5/8", // Maximum length: 200 characters.
+                        "totals": [ {"type": "total", "amount": 500} ]
+                      },
+                      {
+                        "id": "ship_express",
+                        "title": "Express (1-2 days)",
+                        "description": "Estimated Delivery: Wed 5/6", // Maximum length: 200 characters.
+                        "totals": [ {"type": "total", "amount": 1500} ]
+                      }
+                    ],
+                    "selected_option_id": "ship_ground"
+                  }
+                ]
+              }
+            ]
+          },
+          "links": [
+            {
+              "type": "terms_of_service",
+              "url": "https://m.com/terms",
+              "title": "Terms of Service"
+            },
+            {
+              "type": "privacy_policy",
+              "url": "https://m.com/privacy",
+              "title": "Privacy Policy"
+            }
+          ]
+        }
+
+         ```
+
+        Checkout session creation failed:
+
+        ``` json
+        {
+          "ucp": {
+            "version": "2026-04-08",
+            "status": "error"
+          },
+          "messages": [
+            {
+              "type": "error",
+              "code": "out_of_stock",
+              "content": "All requested items are currently out of stock",
+              "severity": "unrecoverable"
+            }
+          ],
+          "continue_url": "https://merchant.com/"
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            example: |-
+              // Create checkout with multiple items
+              {
+                  "line_items": [
+                      {
+                          "item": {
+                              // Must match ID in product feed
+                              "id": "product_12345"
+                          },
+                          "quantity": 1
+                      },
+                      {
+                          "item": {
+                              // Must match ID in product feed
+                              "id": "product_67890"
+                          },
+                          "quantity": 1
+                      }
+                  ],
+                  "context": {
+                      "language": "en"
+                  },
+                  "fulfillment": {
+                      "methods": [
+                          {
+                              "type": "shipping",
+                              "line_item_ids": [
+                                  "line_1",
+                                  "line_2"
+                              ],
+                              "destinations": [
+                                  {
+                                      "id": "addr_1",
+                                      "address_locality": "Sunnyvale",
+                                      "address_region": "CA",
+                                      "postal_code": "94089",
+                                      "address_country": "US"
+                                  }
+                              ],
+                              "selected_destination_id": "addr_1"
+                          }
+                      ]
+                  }
+              }
+  '/checkout-sessions/{checkoutSessionId}':
+    get:
+      summary: 'Google: Get checkout session'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+      responses: {}
+      security:
+        - BearerAuth: []
+      description: |-
+        Example merchant response:
+
+        ``` json
+        {
+          "ucp": {
+            "version": "2026-08-25",
+            "capabilities": {
+              "dev.ucp.shopping.checkout": [
+                {"version": "2026-08-25"}
+              ]
+            },
+            "payment_handlers": {
+              "com.shopify.shop_pay": [
+                {
+                  "id": "shop_pay_1234",
+                  "version": "2026-08-25",
+                  "available_instruments": [
+                    {"type": "shop_pay"}
+                  ],
+                  "config": {
+                    "merchant_id": "shop_merchant_123"
+                  }
+                }
+              ]
+            }
+          },
+          "id": "chk_123456789",
+          "status": "completed",
+          "currency": "USD",
+          "order": {
+            "id": "ord_99887766",
+            "permalink_url": "https://merchant.com/orders/ord_99887766"
+          },
+          "line_items": [
+            {
+              "id": "li_1",
+              "item": {
+                "id": "item_123",
+                "title": "Red T-Shirt",
+                "price": 2500
+              },
+              "quantity": 2,
+              "totals": [
+                {"type": "subtotal", "amount": 5000},
+                {"type": "total", "amount": 5000}
+              ]
+            }
+          ],
+          "buyer": {
+            "email": "jane@example.com",
+            "first_name": "Jane",
+            "last_name": "Doe"
+          },
+          "totals": [
+            {
+              "type": "subtotal",
+              "amount": 5000
+            },
+            {
+              "type": "tax",
+              "amount": 400
+            },
+            {
+              "type": "total",
+              "amount": 5400
+            }
+          ],
+          "links": [
+            {
+              "type": "terms_of_service",
+              "url": "https://merchant.com/terms"
+            }
+          ],
+          "fulfillment": {
+            "methods": [
+              {
+                "id": "shipping_1",
+                "type": "shipping",
+                "line_item_ids": ["li_1"],
+                "selected_destination_id": "dest_home",
+                "destinations": [
+                  {
+                    "type": "shipping_address",
+                    "id": "dest_home",
+                    "street_address": "123 Main St",
+                    "address_locality": "Springfield",
+                    "address_region": "IL",
+                    "postal_code": "62701",
+                    "address_country": "US"
+                  }
+                ],
+                "groups": [
+                  {
+                    "id": "package_1",
+                    "line_item_ids": ["li_1"],
+                    "selected_option_id": "express",
+                    "options": [
+                      {
+                        "id": "standard",
+                        "title": "Standard Shipping",
+                        "description": "Arrives in 5-7 business days",
+                        "totals": [
+                          {
+                            "type": "total",
+                            "amount": 500
+                          }
+                        ]
+                      },
+                      {
+                        "id": "express",
+                        "title": "Express Shipping",
+                        "description": "Arrives in 2-3 business days",
+                        "totals": [
+                          {
+                            "type": "total",
+                            "amount": 1000
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "payment": {
+            "instruments": [
+              {
+                "id": "instr_shop_pay_1",
+                "handler_id": "shop_pay_1234",
+                "type": "shop_pay",
+                "selected": true,
+                "display": {
+                  "email": "buyer@example.com"
+                }
+              }
+            ]
+          }
+        }
+
+         ```
+    parameters:
+      - name: checkoutSessionId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: '{{checkoutSessionId}}'
+    put:
+      summary: 'Google: Update checkout session'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          example: '{{$guid}}'
+      responses:
+        '200':
+          description: Update shipping address
+          content:
+            application/json:
+              schema:
+                type: object
+      security:
+        - BearerAuth: []
+      description: |-
+        Example merchant response:
+
+        ``` json
+        // Session after full hydration with multiple items.
+        {
+          "ucp": {
+            "version": "2026-04-08",
+            "status": "success",
+            "capabilities": {
+              "dev.ucp.shopping.checkout": [ { "version": "2026-04-08" } ],
+              "dev.ucp.shopping.fulfillment": [ { "version": "2026-04-08", "extends": "dev.ucp.shopping.checkout" } ]
+            },
+            "payment_handlers": {
+              "com.google.pay": [
+                {
+                  "id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+                  "version": "2026-01-23",
+                  "spec": "https://pay.google.com/gp/p/ucp/2026-01-23/",
+                  "schema": "https://pay.google.com/gp/p/ucp/2026-01-23/schemas/config.json",
+                  "config": {
+                    "api_version": 2,
+                    "api_version_minor": 0,
+                    "environment": "TEST",
+                    "merchant_info": {
+                      "merchant_name": "Example Merchant",
+                      "merchant_id": "KWMZPRLQFTYNXSDB",
+                      "merchant_origin": "checkout.merchant.com"
+                    },
+                    "allowed_payment_methods": [
+                      {
+                        "type": "CARD",
+                        "parameters": {
+                          "allowed_auth_methods": [ "PAN_ONLY", "CRYPTOGRAM_3DS" ],
+                          "allowed_card_networks": [ "AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA" ],
+                          "billing_address_required": true,
+                          "billing_address_parameters": {
+                            "format": "FULL",
+                            "phone_number_required": true
+                          }
+                        },
+                        "tokenization_specification": {
+                          "type": "PAYMENT_GATEWAY",
+                          "parameters": {
+                            "gateway": "example",
+                            "gatewayMerchantId": "exampleGatewayMerchantId"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+          "status": "ready_for_complete",
+          "currency": "USD",
+          "buyer": {
+            "first_name": "John",
+            "last_name": "Buyer",
+            "email": "johnbuyer@example.com",
+            "phone_number": "+18888888888"
+          },
+          "line_items": [
+            {
+              "id": "line_1",
+              "item": {
+                "id": "product_12345",
+                "title": "Running Shoes",
+                "price": 10000,
+                "image_url": "https://merchant.example.com/images/product_12345.png"
+              },
+              "quantity": 1,
+              "totals": [
+                { "type": "subtotal", "amount": 10000 },
+                { "type": "total", "amount": 10000 }
+              ]
+            },
+            {
+              "id": "line_2",
+              "item": {
+                "id": "product_67890",
+                "title": "T-Shirt",
+                "price": 2500,
+                "image_url": "https://merchant.example.com/images/product_67890.png"
+              },
+              "quantity": 1,
+              "totals": [
+                { "type": "subtotal", "amount": 2500 },
+                { "type": "total", "amount": 2500 }
+              ]
+            }
+          ],
+          "totals": [
+             { "type": "subtotal", "display_text": "Subtotal", "amount": 12500 },
+             { "type": "fulfillment", "display_text": "Ground Shipping", "amount": 600 },
+              {
+                "type": "fee",
+                "display_text": "Fees",
+                "amount": 549,
+                "lines": [
+                  { "display_text": "Service Fee", "amount": 399 },
+                  { "display_text": "Recycling Fee", "amount": 150 }
+                ]
+              },
+             { "type": "tax", "display_text": "Estimated Tax", "amount": 1120 },
+             { "type": "total", "display_text": "Total", "amount": 14769 }
+          ],
+          "fulfillment": {
+            "methods": [
+              {
+                "id": "method_shipping",
+                "type": "shipping",
+                "line_item_ids": ["line_1", "line_2"],
+                "selected_destination_id": "addr_1",
+                "destinations": [
+                  {
+                    "id": "addr_1",
+                    "first_name": "Alice",
+                    "last_name": "Receiver",
+                    "street_address": "1600 Amphitheatre Pkwy",
+                    "extended_address": "Suite #60",
+                    "address_locality": "Mountain View",
+                    "address_region": "CA",
+                    "postal_code": "94043",
+                    "address_country": "US",
+                    "phone_number": "+18888888888"
+                  }
+                ],
+                "groups": [
+                  {
+                    "id": "group_1",
+                    "line_item_ids": ["line_1", "line_2"],
+                    "selected_option_id": "ship_ground",
+                    "options": [
+                      {
+                        "id": "ship_ground",
+                        "title": "Ground (3-5 days)",
+                        "description": "Estimated Delivery: Fri 5/8", // Maximum length: 200 characters.
+                        "totals": [ { "type": "total", "amount": 600 } ]
+                      },
+                      {
+                        "id": "ship_express",
+                        "title": "Express (1-2 days)",
+                        "description": "Estimated Delivery: Wed 5/6", // Maximum length: 200 characters.
+                        "totals": [ { "type": "total", "amount": 1600 } ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "links": [
+            {
+              "type": "terms_of_service",
+              "url": "https://m.com/terms",
+              "title": "Terms of Service"
+            },
+            {
+              "type": "privacy_policy",
+              "url": "https://m.com/privacy",
+              "title": "Privacy Policy"
+            }
+          ]
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            example: |-
+              // Full checkout object hydration for multiple items
+              {
+                "buyer": {
+                  "first_name": "John",
+                  "last_name": "Buyer",
+                  "email": "johnbuyer@example.com",
+                  "phone_number": "+18888888888"
+                },
+                "line_items": [
+                  {
+                    "id": "line_1",
+                    "item": { "id": "product_12345" },
+                    "quantity": 1
+                  },
+                  {
+                    "id": "line_2",
+                    "item": { "id": "product_67890" },
+                    "quantity": 1
+                  }
+                ],
+                "fulfillment": {
+                  "methods": [
+                    {
+                      "id": "method_shipping",
+                      "type": "shipping",
+                      "line_item_ids": ["line_1", "line_2"],
+                      "selected_destination_id": "addr_1",
+                      "destinations": [
+                        {
+                          "id": "addr_1",
+                          "first_name": "Alice",
+                          "last_name": "Receiver",
+                          "street_address": "1600 Amphitheatre Pkwy",
+                          "extended_address": "Suite #60",
+                          "address_locality": "Mountain View",
+                          "address_region": "CA",
+                          "postal_code": "94043",
+                          "address_country": "US",
+                          "phone_number": "+18888888888"
+                        }
+                      ],
+                      "groups": [
+                        {
+                          "id": "group_1",
+                          "selected_option_id": "ship_ground"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+  '/checkout-sessions/{checkoutSessionId}/complete':
+    post:
+      summary: 'Google: Complete checkout session'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          example: '{{$guid}}'
+      responses: {}
+      security:
+        - BearerAuth: []
+      description: |-
+        ### Example merchant responses
+
+        Payment processed successfully:
+
+        ``` json
+        {
+          "ucp": {
+              "version": "2026-04-08",
+              "status": "success",
+              "capabilities": [...]
+          },
+          "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+          "status": "completed",
+          // ... other fields (line_items, currency, etc.)
+          "payment": {
+            "instruments": [
+              {
+                "id": "94e7fee0-1a82-4c2a-9ef4-0861a3c829b2",
+                "handler_id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+                "type": "card",
+                "selected": true,
+                "display": {
+                  "brand": "VISA",
+                  "description": "Visa •••• 1234",
+                  "last_digits": "1234"
+                },
+                "billing_address": {
+                  "first_name": "John",
+                  "last_name": "Buyer",
+                  "street_address": "100 Main St",
+                  "extended_address": "Apt 4B",
+                  "address_locality": "San Francisco",
+                  "address_region": "CA",
+                  "postal_code": "94105",
+                  "address_country": "US",
+                  "phone_number": "+18888888888"
+                }
+              }
+            ]
+          },
+          "order": {
+            "id": "ORD1773956535-2727807",
+            // Example customer-facing order number
+            "label": "#100",
+            "permalink_url": "https://merchant.example.com/orders/789"
+          }
+        }
+
+         ```
+
+        Additional information required:
+
+        ``` json
+        {
+          "ucp": {
+            "version": "2026-04-08",
+            "status": "success"
+          },
+          "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+          "status": "incomplete",
+          "messages": [
+            {
+              "type": "error",
+              "code": "missing_buyer_info",
+              "severity": "recoverable",
+              "content": "Buyer email is required"
+            },
+            {
+              "type": "error",
+              "code": "missing_fulfillment_info",
+              "severity": "recoverable",
+              "content": "Select delivery window for your purchase"
+            }
+          ]
+        }
+
+         ```
+
+        3DS authentication challenge required:
+
+        ``` json
+        {
+          "status": "complete_in_progress",
+          "actions": {
+            "dev.ucp.common.payment.three_ds_challenge": [
+              {
+                "id": "three-ds-challenge-1",
+                "config": {
+                  "payment_instrument_id": "instrument_1",
+                  "url": "https://api.sandbox.checkout.com/agentic_commerce/ucp/3ds/wrap.html?u=https://authentication-devices.sandbox.checkout.com/sessions-interceptor/sid_3egvq7qb3adypf3jhbh5o72bpe&a=three-ds-challenge-1&v=2026-08-25"
+                }
+              }
+            ]
+          }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment:
+                  type: object
+                  properties:
+                    instruments:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          billing_address:
+                            type: object
+                            properties:
+                              first_name:
+                                type: string
+                              last_name:
+                                type: string
+                              street_address:
+                                type: string
+                              extended_address:
+                                type: string
+                              address_locality:
+                                type: string
+                              address_region:
+                                type: string
+                              postal_code:
+                                type: string
+                                format: utc-millisec
+                              address_country:
+                                type: string
+                              phone_number:
+                                type: string
+                                format: utc-millisec
+                          credential:
+                            type: object
+                            properties:
+                              token:
+                                type: string
+                              type:
+                                type: string
+                          display:
+                            type: object
+                            properties:
+                              brand:
+                                type: string
+                              description:
+                                type: string
+                              last_digits:
+                                type: string
+                                format: utc-millisec
+                          handler_id:
+                            type: string
+                          id:
+                            type: string
+                          selected:
+                            type: boolean
+                          type:
+                            type: string
+                signals:
+                  type: object
+                  properties:
+                    com.google.authentication_triggered:
+                      type: string
+                    com.google.authorization_processed_with_3ds:
+                      type: string
+                    com.google.avs_full_result:
+                      type: string
+                    com.google.cvv_result:
+                      type: string
+                    com.google.ip_address:
+                      type: string
+                      format: ip-address
+                    dev.ucp.buyer_id:
+                      type: string
+                    dev.ucp.buyer_ip:
+                      type: string
+                      format: ip-address
+            example:
+              payment:
+                instruments:
+                  - billing_address:
+                      first_name: John
+                      last_name: Buyer
+                      street_address: 100 Main St
+                      extended_address: Apt 4B
+                      address_locality: San Francisco
+                      address_region: CA
+                      postal_code: '94105'
+                      address_country: US
+                      phone_number: '+18888888888'
+                    credential:
+                      token: examplePaymentMethodToken
+                      type: PAYMENT_GATEWAY
+                    display:
+                      brand: VISA
+                      description: Visa •••• 1234
+                      last_digits: '1234'
+                    handler_id: 8c9202bd-63cc-4241-8d24-d57ce69ea31c
+                    id: 94e7fee0-1a82-4c2a-9ef4-0861a3c829b2
+                    selected: true
+                    type: card
+              signals:
+                com.google.authentication_triggered: ''
+                com.google.authorization_processed_with_3ds: ''
+                com.google.avs_full_result: ''
+                com.google.cvv_result: ''
+                com.google.ip_address: 203.0.113.1
+                dev.ucp.buyer_id: ec46fedc6aad89d3660a50a61d00b4908fd160ecf5dda6d49ed41a605c5b180a
+                dev.ucp.buyer_ip: 203.0.113.1
+    parameters:
+      - name: checkoutSessionId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: '{{checkoutSessionId}}'
+  /tokens:
+    post:
+      summary: 'Merchant: Create a single-use payment token'
+      responses: {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                token_data:
+                  type: object
+                  properties:
+                    signature:
+                      type: string
+                    protocolVersion:
+                      type: string
+                    signedMessage:
+                      type: string
+                      format: style
+            example:
+              type: googlepay
+              token_data:
+                signature: MEUCIGNeSpbC+WYPwdCB6n4NzT3iLcX1EZ5C73z/77mIrEgBAiEA0p84kRQJNMpGBqPbFqWaKJ2dtCYgfHwCat3nbZsK7Rg=
+                protocolVersion: ECv1
+                signedMessage: '{"encryptedMessage":"LpeGZ7T3avwZAunTXTHNbSAFDUj92htIrIcg3GhJLf+2lEx9SN1Z5xjG1A4WxqxEhy9a6LojQocFrJbU81HmlxOScfImip+w3A1i+pNA4ZLGiuye4Yjyuh9ebUioPnL4u6HdzmpMYCdKu08tv/LrQv06GTrUjO2PPP0IrGw6jfGrlVaSCrH1456BLIu0ibpGl7W5bgFpdte/0PxlMjxGxwj7pbNzNXh4h8Yng4FTMwtGqp7yLKGcPn7qbf6fmPGtlXk6dmeFJp556ydPFsh1ttIgG+R0BiVE7lUQrjQTtO9lOpxIzmH4RlwlsOYNvaFkOs4lFaAIXZGNnub8VAi2laB9rvTUmHh00c612LGimC0cWx0c4OHY2a5mwflbq2HeDwS6BYXkhbR+mKGM9ZTW03KbZzcRw+R7tzklwx8X7rYFWKDVCkbLcYv5NaiRYYKoAmYZLrHxpYg/","ephemeralPublicKey":"BB7ykrDf2ek+jKnGbPpnN9xsi0dkKqvfwUC+z9fpyPyGC0SykKwmaXLoFp4DDYndJ1v8Is16tIXN+c3PHqm/Ab4\u003d","tag":"nudDqC724RrbCX+ek3fPEWoyUpfSDo0dCT/rHTfhcTw\u003d"}'
+  /payments:
+    post:
+      summary: 'Merchant: Request payment'
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          example: '{{$guid}}'
+      responses: {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            example: |-
+              {
+                  "source": {
+                      "type": "token",
+                      "token": "{{ckoTokenId}}"
+                  },
+                  "amount": 1000,
+                  "currency": "USD",
+                  "reference": "ORD1773956535-2727807",
+                  "processing_channel_id": "{{ckoProcessingChannelId}}", // Required depending on API key scope
+                  
+                  /* Set the following if you have required a 3DS authentication challenge */
+                  "3ds": {
+                      "enabled": true
+                  },
+                  "success_url": ""{{ckoUcp3dsBaseUrl}}"/return.html?outcome=success",
+                  "failure_url": ""{{ckoUcp3dsBaseUrl}}"/return.html?outcome=failure"
+              }
+  '/checkout-sessions/{checkoutSessionId}/cancel':
+    post:
+      summary: 'Google: Cancel checkout'
+      parameters:
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="https://ucp.goog/.well-known/ucp"'
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          example: '{{$guid}}'
+      responses: {}
+      security:
+        - BearerAuth: []
+      description: |-
+        Example merchant response:
+
+        ``` json
+        {
+          "ucp": {
+            "version": "2026-08-25",
+            "capabilities": {
+              "dev.ucp.shopping.checkout": [
+                {"version": "2026-08-25"}
+              ]
+            },
+            "payment_handlers": {
+              "com.google.pay": [
+                {
+                  "id": "gpay_1234",
+                  "version": "2026-08-25",
+                  "config": {
+                    "allowed_payment_methods": [
+                      {
+                        "type": "CARD",
+                        "parameters": {
+                          "allowed_card_networks": ["VISA", "MASTERCARD", "AMEX"]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "id": "chk_123456789",
+          "status": "canceled", // Status is updated to canceled.
+          "currency": "USD",
+          "line_items": [
+            {
+              "id": "li_1",
+              "item": {
+                "id": "item_123",
+                "title": "Red T-Shirt",
+                "price": 2500
+              },
+              "quantity": 2,
+              "totals": [
+                {"type": "subtotal", "amount": 5000},
+                {"type": "total", "amount": 5000}
+              ]
+            }
+          ],
+          "buyer": {
+            "email": "jane@example.com",
+            "first_name": "Jane",
+            "last_name": "Doe"
+          },
+          "totals": [
+            {
+              "type": "subtotal",
+              "amount": 5000
+            },
+            {
+              "type": "tax",
+              "amount": 400
+            },
+            {
+              "type": "total",
+              "amount": 5400
+            }
+          ],
+          "links": [
+            {
+              "type": "terms_of_service",
+              "url": "https://merchant.com/terms"
+            }
+          ],
+          "fulfillment": {
+            "methods": [
+              {
+                "id": "shipping_1",
+                "type": "shipping",
+                "line_item_ids": ["li_1"],
+                "selected_destination_id": "dest_home",
+                "destinations": [
+                  {
+                    "type": "shipping_address",
+                    "id": "dest_home",
+                    "street_address": "123 Main St",
+                    "address_locality": "Springfield",
+                    "address_region": "IL",
+                    "postal_code": "62701",
+                    "address_country": "US"
+                  }
+                ],
+                "groups": [
+                  {
+                    "id": "package_1",
+                    "line_item_ids": ["li_1"],
+                    "selected_option_id": "express",
+                    "options": [
+                      {
+                        "id": "standard",
+                        "title": "Standard Shipping",
+                        "description": "Arrives in 5-7 business days",
+                        "totals": [
+                          {
+                            "type": "total",
+                            "amount": 500
+                          }
+                        ]
+                      },
+                      {
+                        "id": "express",
+                        "title": "Express Shipping",
+                        "description": "Arrives in 2-3 business days",
+                        "totals": [
+                          {
+                            "type": "total",
+                            "amount": 1000
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "payment": {
+            "instruments": [
+              {
+                "id": "pi_gpay_5678",
+                "handler_id": "gpay_1234",
+                "type": "card",
+                "selected": true,
+                "display": {
+                  "brand": "mastercard",
+                  "last_digits": "5678",
+                  "rich_text_description": "Google Pay •••• 5678"
+                }
+              }
+            ]
+          }
+        }
+
+         ```
+    parameters:
+      - name: checkoutSessionId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: '{{checkoutSessionId}}'
+  '/v1/webhooks/partners/{partnerId}/events/order':
+    post:
+      summary: 'Merchant: Push order created event'
+      parameters:
+        - name: Webhook-Id
+          in: header
+          schema:
+            type: string
+          example: 'order_{{$guid}}'
+        - name: Webhook-Timestamp
+          in: header
+          schema:
+            type: string
+          example: '{{$isoTimestamp}}'
+        - name: Content-Digest
+          in: header
+          schema:
+            type: string
+          example: '{{webhookHash}}'
+        - name: UCP-Agent
+          in: header
+          schema:
+            type: string
+          example: 'profile="{{merchantBaseUrl}}/.well-known/ucp"'
+        - name: Signature-Input
+          in: header
+          schema:
+            type: string
+          example: '{{webhookSignatureInput}}'
+        - name: Signature
+          in: header
+          schema:
+            type: string
+          example: '{{webhookSignature}}'
+      responses: {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            example: |-
+              {
+                "ucp": {
+                  "version": "2026-04-08",
+                  "capabilities": {
+                    "dev.ucp.shopping.order": [{"version": "2026-04-08"}]
+                  }
+                },
+                "id": "order_01",
+                "checkout_id": "checkout_01",
+                "currency": "USD",
+                 // Always include all line items, even for single-item checkouts. This ensures any add-ons, gifts, or separate charges are accounted for.
+                "line_items": [
+                  {
+                    "id": "line_1",
+                    "item":
+                      {
+                        "id": "product_123",
+                        "title": "Running Shoes",
+                        "price": 10000
+                      },
+                    "quantity": { "total": 1, "fulfilled": 0 },
+                    "totals": [
+                      {"type": "subtotal", "display_text": null, "amount": 10000},
+                      {"type": "total", "display_text": null, "amount": 10000}
+                    ],
+                    // The status of a line item must match total and fulfilled quantities (e.g., total 1, fulfilled 0 -> status: processing).
+                    "status": "processing"
+                  }
+                ],
+                "totals": [
+                  {"type": "subtotal", "display_text": "Subtotal", "amount": 10000}, // Tax-inclusive markets: Set display_text to "Subtotal (including taxes)". Amount must include tax.
+                  {"type": "fee", "display_text": "Service Fee", "amount": 100},
+                  {"type": "tax", "display_text": "Tax", "amount": 800}, // Tax-inclusive markets: Omit this entry.
+                  {"type": "total", "display_text": "Total", "amount": 10900}
+                ],
+                "fulfillment": {
+                  "expectations": [
+                    {
+                      "id": "exp_1",
+                      "line_items": [{ "id": "line_1", "quantity": 1 }],
+                      "method_type": "shipping",
+                      "destination": {
+                        "first_name": "Alice",
+                        "last_name": "Example",
+                        "street_address": "123 Main St",
+                        "address_locality": "Austin",
+                        "address_region": "TX",
+                        "address_country": "US",
+                        "postal_code": "78701"
+                      },
+                      "description": "Arrives in 2-3 business days",  // Maximum length: 200 characters.
+                      "fulfillable_on": "now"
+                    }
+                  ]
+                },
+                "permalink_url": "https://merchant.example.com/orders/789"
+              }
+    parameters:
+      - name: partnerId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: '{{partnerId}}'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

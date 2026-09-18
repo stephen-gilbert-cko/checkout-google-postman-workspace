@@ -1,0 +1,46 @@
+$kind: http-request
+name: "Merchant: Request payment"
+url: "{{ckoBaseUrl}}/payments"
+method: POST
+headers:
+  Content-Type: application/json
+  Idempotency-Key: "{{$guid}}"
+body:
+  type: json
+  content: |-
+    {
+        "source": {
+            "type": "token",
+            "token": "{{ckoTokenId}}"
+        },
+        "amount": 1000,
+        "currency": "USD",
+        "reference": "ORD1773956535-2727807",
+        "processing_channel_id": "{{ckoProcessingChannelId}}", // Required depending on API key scope
+        
+        /* Set the following if you have required a 3DS authentication challenge */
+        "3ds": {
+            "enabled": true
+        },
+        "success_url": "{{ckoUcp3dsBaseUrl}}/return.html?outcome=success",
+        "failure_url": "{{ckoUcp3dsBaseUrl}}/return.html?outcome=failure"
+    }
+auth:
+  type: apikey
+  credentials:
+    key: Authorization
+    value: "{{ckoSecretKey}}"
+scripts:
+  - type: afterResponse
+    code: |
+      const response = pm.response.json();
+      const cko3dsUrl = response["_links"]["redirect"]["href"];
+
+      const encoded3dsUrl = encodeURIComponent(cko3dsUrl);
+      const ckoUcpBaseUrl = pm.environment.get("ckoUcp3dsBaseUrl");
+      const ucp3dsExtensionVersion = pm.environment.get("ucp3dsExtensionVersion");
+
+      const ucp3dsUrl = `${ckoUcpBaseUrl}/wrap.html?u=${encoded3dsUrl}&v=${ucp3dsExtensionVersion}`
+      pm.environment.set("ckoUcp3dsUrl", ucp3dsUrl);
+    language: text/javascript
+order: 4473594234164759

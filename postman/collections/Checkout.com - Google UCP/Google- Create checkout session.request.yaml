@@ -1,0 +1,298 @@
+$kind: http-request
+name: "Google: Create checkout session"
+description: |-
+  ### Example merchant responses
+
+  Checkout session created successfully:
+
+  ``` json
+  // Initialize Session with multiple items.
+  {
+    "ucp": {
+      "version": "2026-04-08",
+      "status": "success",
+      "capabilities": {
+        "dev.ucp.shopping.checkout": [ { "version": "2026-04-08" } ],
+        "dev.ucp.shopping.fulfillment": [ { "version": "2026-04-08", "extends": "dev.ucp.shopping.checkout" } ]
+      },
+      "payment_handlers": {
+        "com.google.pay": [
+          {
+            "id": "8c9202bd-63cc-4241-8d24-d57ce69ea31c",
+            "version": "2026-01-23",
+            "spec": "https://pay.google.com/gp/p/ucp/2026-01-23/",
+            "schema": "https://pay.google.com/gp/p/ucp/2026-01-23/schemas/config.json",
+            "config": {
+              "api_version": 2,
+              "api_version_minor": 0,
+              "environment": "TEST",
+              "merchant_info": {
+                "merchant_name": "Example Merchant",
+                "merchant_id": "KWMZPRLQFTYNXSDB",
+                "merchant_origin": "checkout.merchant.com"
+              },
+              "allowed_payment_methods": [
+                {
+                  "type": "CARD",
+                  "parameters": {
+                    "allowed_auth_methods": [ "PAN_ONLY", "CRYPTOGRAM_3DS" ],
+                    "allowed_card_networks": [ "AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA" ],
+                    "billing_address_required": true,
+                    "billing_address_parameters": {
+                      "format": "FULL",
+                      "phone_number_required": true
+                    }
+                  },
+                  "tokenization_specification": {
+                    "type": "PAYMENT_GATEWAY",
+                    "parameters": {
+                      "gateway": "example",
+                      "gatewayMerchantId": "exampleGatewayMerchantId"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "id": "bf8c1b4b-6b1c-4c6a-8f2a-53c2a7c3b2e1",
+    "status": "incomplete",
+    "messages": [
+      {
+        "type": "error",
+        "code": "missing_buyer_info",
+        "path": "$.buyer",
+        "content_type": "plain",
+        "content": "Buyer information is required for checkout",
+        "severity": "recoverable"
+      },
+      {
+        "type": "error",
+        "code": "missing_fulfillment_info",
+        "path": "$.fulfillment.methods[0].destinations[0]",
+        "content_type": "plain",
+        "content": "Shipping address is incomplete",
+        "severity": "recoverable"
+      }
+    ],
+    "currency": "USD",
+    "line_items": [
+      {
+        "id": "line_1",
+        "item": {
+          "id": "product_12345",
+          "title": "Running Shoes",
+          "price": 10000,
+          "image_url": "https://merchant.example.com/images/product_12345.png"
+        },
+        "quantity": 1,
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 10000
+          },
+          {
+            "type": "total",
+            "amount": 10000
+          }
+        ]
+      },
+      {
+        "id": "line_2",
+        "item": {
+          "id": "product_67890",
+          "title": "T-Shirt",
+          "price": 2500,
+          "image_url": "https://merchant.example.com/images/product_67890.png"
+        },
+        "quantity": 1,
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 2500
+          },
+          {
+            "type": "total",
+            "amount": 2500
+          }
+        ]
+      }
+    ],
+    "totals": [
+      {
+        "type": "subtotal",
+        "display_text": "Subtotal", // Tax-inclusive markets: Set to "Subtotal (including taxes)".
+        "amount": 12500 // Tax-inclusive markets: Amount must include tax.
+      },
+      {
+        "type": "fee",
+        "display_text": "Fees",
+        "amount": 549,
+        "lines": [
+          { "display_text": "Service Fee", "amount": 399 },
+          { "display_text": "Recycling Fee", "amount": 150 }
+        ]
+      },
+      {
+        "type": "fulfillment",
+        "display_text": "Ground Shipping", // Tax-inclusive markets: Provide display text for fulfillment totals.
+        "amount": 500
+      },
+      {
+        "type": "tax", // Tax-inclusive markets: Omit this entry.
+        "display_text": "Estimated Tax",
+        "amount": 1050
+      },
+      {
+        "type": "total",
+        "display_text": "Total",
+        "amount": 14599
+      }
+    ],
+    "fulfillment": {
+      "methods": [
+        {
+          "id": "method_shipping",
+          "type": "shipping",
+          "line_item_ids": [
+            "line_1",
+            "line_2"
+          ],
+          "destinations": [
+            {
+              "id": "addr_1",
+              "address_locality": "Sunnyvale",
+              "address_region": "CA",
+              "postal_code": "94089",
+              "address_country": "US"
+            }
+          ],
+          "selected_destination_id": "addr_1",
+          "groups": [
+            {
+              "id": "group_1",
+              "line_item_ids": [
+                "line_1",
+                "line_2"
+              ],
+              "options": [
+                {
+                  "id": "ship_ground",
+                  "title": "Ground (3-5 days)",
+                  "description": "Estimated Delivery: Fri 5/8", // Maximum length: 200 characters.
+                  "totals": [ {"type": "total", "amount": 500} ]
+                },
+                {
+                  "id": "ship_express",
+                  "title": "Express (1-2 days)",
+                  "description": "Estimated Delivery: Wed 5/6", // Maximum length: 200 characters.
+                  "totals": [ {"type": "total", "amount": 1500} ]
+                }
+              ],
+              "selected_option_id": "ship_ground"
+            }
+          ]
+        }
+      ]
+    },
+    "links": [
+      {
+        "type": "terms_of_service",
+        "url": "https://m.com/terms",
+        "title": "Terms of Service"
+      },
+      {
+        "type": "privacy_policy",
+        "url": "https://m.com/privacy",
+        "title": "Privacy Policy"
+      }
+    ]
+  }
+
+   ```
+
+  Checkout session creation failed:
+
+  ``` json
+  {
+    "ucp": {
+      "version": "2026-04-08",
+      "status": "error"
+    },
+    "messages": [
+      {
+        "type": "error",
+        "code": "out_of_stock",
+        "content": "All requested items are currently out of stock",
+        "severity": "unrecoverable"
+      }
+    ],
+    "continue_url": "https://merchant.com/"
+  }
+
+   ```
+url: "{{merchantBaseUrl}}/checkout-sessions"
+method: POST
+headers:
+  Content-Type: application/json
+  UCP-Agent: profile="https://ucp.goog/.well-known/ucp"
+  Idempotency-Key: "{{$guid}}"
+body:
+  type: json
+  content: |-
+    // Create checkout with multiple items
+    {
+        "line_items": [
+            {
+                "item": {
+                    // Must match ID in product feed
+                    "id": "product_12345"
+                },
+                "quantity": 1
+            },
+            {
+                "item": {
+                    // Must match ID in product feed
+                    "id": "product_67890"
+                },
+                "quantity": 1
+            }
+        ],
+        "context": {
+            "language": "en"
+        },
+        "fulfillment": {
+            "methods": [
+                {
+                    "type": "shipping",
+                    "line_item_ids": [
+                        "line_1",
+                        "line_2"
+                    ],
+                    "destinations": [
+                        {
+                            "id": "addr_1",
+                            "address_locality": "Sunnyvale",
+                            "address_region": "CA",
+                            "postal_code": "94089",
+                            "address_country": "US"
+                        }
+                    ],
+                    "selected_destination_id": "addr_1"
+                }
+            ]
+        }
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{authToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const response = pm.response.json();
+      pm.environment.set("checkoutSessionId", response["id"]);
+    language: text/javascript
+order: 2000
