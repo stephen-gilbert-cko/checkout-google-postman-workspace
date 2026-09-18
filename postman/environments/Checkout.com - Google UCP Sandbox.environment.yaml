@@ -1,9 +1,9 @@
 name: Checkout.com / Google UCP Sandbox
 values:
   - key: merchantBaseUrl
-    value: ''
+    value: 'https://example.com'
   - key: ucp3dsExtensionVersion
-    value: ''
+    value: '2026-08-25'
   - key: authToken
     value: ''
   - key: partnerId
@@ -14,22 +14,22 @@ values:
     value: ''
   - key: webhookSignature
     value: ''
+  - key: webhookHash
+    value: ''
   - key: checkoutSessionId
     value: ''
   - key: ckoBaseUrl
-    value: ''
+    value: 'https://cnxotvu6.api.sandbox.checkout.com'
   - key: ckoUcp3dsBaseUrl
-    value: ''
+    value: 'https://api.sandbox.checkout.com/agentic_commerce/ucp/3ds'
   - key: ckoPublicKey
     value: ''
   - key: ckoSecretKey
     value: ''
   - key: ckoProcessingChannelId
-    value: ''
+    value: pc_q3za5dznh56uljcsf6wrpfpqky
   - key: ckoTokenId
     value: ''
   - key: ckoUcp3dsUrl
-    value: ''
-  - key: webhookHash
     value: ''
 color: 240
